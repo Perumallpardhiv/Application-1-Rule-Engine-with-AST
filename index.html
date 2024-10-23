@@ -57,6 +57,12 @@
             background-color: rgba(79, 131, 204, 0.1);
         }
 
+        .nav-brand:hover {
+            color: var(--primary-dark);
+            background-color: rgba(79, 131, 204, 0.2);
+            transform: scale(1.05);
+        }
+
         .container {
             max-width: 1100px;
             margin: 2rem auto;
@@ -111,6 +117,11 @@
             transition: background-color 0.3s, transform 0.2s;
         }
 
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
         .form-container {
             display: flex;
             justify-content: space-between;
@@ -129,8 +140,8 @@
 
         .upme {
             background-color: #1e1e1e;
-        } 
-    </style> 
+        }
+    </style>
 </head>
 
 <body>
@@ -159,6 +170,25 @@
                             <button type="submit">Create Rule</button>
                         </form>
                         <pre id="create-rule-result"></pre>
+                    </div>
+                </div>
+                <div class="main-content2">
+                    <h2>Combine Rules</h2>
+                    <div class="main-content">
+                        <form id="combine-rules-form">
+                            <div id="rules-inputs">
+                                <div class="rule-container">
+                                    <div>
+                                        <label for="combine-rule1">Rule 1:</label>
+                                        <input type="text" id="combine-rule1" name="rule1" required
+                                            placeholder="Enter first rule">
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" id="add-rule">Add Another Rule</button>
+                            <button type="submit">Combine Rules</button>
+                        </form>
+                        <pre id="combine-rules-result"></pre>
                     </div>
                 </div>
             </div>
@@ -217,6 +247,59 @@
                     resultElement.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
                 }
             });
+
+            document.getElementById('combine-rules-form').addEventListener('submit', async function (event) {
+                event.preventDefault();
+                const rules = Array.from(document.querySelectorAll('input[id^="combine-rule"]')).map(input => input.value);
+                const operators = Array.from(document.querySelectorAll('select[id^="operator"]')).map(select => select.value);
+
+                console.log('Rules:', rules);
+                console.log('Operators:', operators);
+
+                try {
+                    const response = await fetch('/api/rules/combine_rules', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ rules, operators }),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to combine rules');
+                    }
+                    const result = await response.json();
+                    console.log('API Result:', result);
+                    let treeHTML = generateTreeHTML(result.ruleAST);
+                    treeHTML += `<br><p>Rule Name: ${result.ruleName}</p>`;
+                    document.getElementById('combine-rules-result').innerHTML = treeHTML;
+                } catch (error) {
+                    console.error('Error:', error);
+                    document.getElementById('combine-rules-result').innerHTML = 'Error: ' + error.message;
+                }
+            });
+
+            document.getElementById('add-rule').addEventListener('click', function () {
+                const ruleInputContainer = document.createElement('div');
+                ruleInputContainer.classList.add('rule-container');
+                const ruleCount = document.querySelectorAll('input[id^="combine-rule"]').length + 1;
+                ruleInputContainer.innerHTML = `
+        <div>
+            <label for="operator${ruleCount}">Operator:</label>
+            <select id="operator${ruleCount}" name="operator${ruleCount}">
+                <option value="AND">AND</option>
+                <option value="OR">OR</option>
+            </select>
+        </div>
+        <div>
+            <label for="combine-rule${ruleCount}">Rule ${ruleCount}:</label>
+            <input type="text" id="combine-rule${ruleCount}" name="rule${ruleCount}" required>
+        </div>
+    `;
+                document.getElementById('rules-inputs').appendChild(ruleInputContainer);
+            });
+
         </script>
 </body>
 

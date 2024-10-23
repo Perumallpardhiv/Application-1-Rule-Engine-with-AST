@@ -48,4 +48,28 @@ function parseRuleString(ruleString) {
     return stack[0];
 }
 
-module.exports = { parseRuleString };
+function combineNodes(rules, operators) {
+    if (rules.length === 1) return rules[0];
+
+    let combined = rules[0];
+    for (let i = 1; i < rules.length; i++) {
+        const currentOperator = operators[i - 1];
+        combined = {
+            type: 'operator',
+            operator: currentOperator,
+            left: combined,
+            right: rules[i],
+        };
+    }
+
+    return combined;
+}
+
+function printTree(node, prefix = '', isLeft = true) {
+    if (!node) return;
+    console.log(prefix + (isLeft ? "├── " : "└── ") + (node.type === 'operator' ? node.operator : `${node.key} ${node.operator} ${node.value}`));
+    if (node.left) printTree(node.left, prefix + (isLeft ? "│   " : "    "), true);
+    if (node.right) printTree(node.right, prefix + (isLeft ? "│   " : "    "), false);
+}
+
+module.exports = { parseRuleString, combineNodes, printTree};
