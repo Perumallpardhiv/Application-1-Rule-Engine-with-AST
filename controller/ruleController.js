@@ -62,3 +62,20 @@ exports.combineRules = async (req, res) => {
     res.status(500).json({ error: 'An error occurred in combining rules.' });
   }
 };
+
+exports.evaluateRule = async (req, res) => {
+  const { ast, data } = req.body;
+
+  try {
+    const rule = await Rule.findOne({ ruleName: ast });
+
+    if (!rule) {
+      return res.status(404).json({ error: 'Rule not found' });
+    }
+
+    const result = evaluate(rule.ruleAST, data);
+    res.status(200).json({ result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

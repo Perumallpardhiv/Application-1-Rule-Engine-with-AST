@@ -192,6 +192,51 @@
                     </div>
                 </div>
             </div>
+            <div class="form-container">
+                <div class="main-content2">
+                    <h2>Evaluate Rule</h2>
+                    <div class="main-content">
+                        <form id="evaluate-rule-form">
+                            <div>
+                                <label for="evaluate-ast">Rule Name:</label>
+                                <input type="text" id="evaluate-ast" name="ast" required
+                                    placeholder="Enter rule name to evaluate">
+                            </div>
+                            <div>
+                                <label for="evaluate-data">Data JSON:</label>
+                                <textarea id="evaluate-data" name="data" required
+                                    placeholder="Enter JSON data to evaluate"></textarea>
+                            </div>
+                            <button type="submit">Evaluate Rule</button>
+                        </form>
+                        <pre id="evaluate-rule-result"></pre>
+                    </div>
+                </div>
+                <div class="main-content2">
+                    <h2>Update Rule</h2>
+                    <div class="main-content">
+                        <form id="update-rule-form">
+                            <div>
+                                <label for="updateRuleId">Rule name:</label>
+                                <input type="text" id="updateRuleId" name="ruleId" required
+                                    placeholder="Enter rule name to update">
+                            </div>
+                            <div>
+                                <label for="updateRuleName">New Rule Name:</label>
+                                <input type="text" id="updateRuleName" name="ruleName" required
+                                    placeholder="Enter new rule name">
+                            </div>
+                            <div>
+                                <label for="updateRuleString">New Rule:</label>
+                                <input type="text" id="updateRuleString" name="ruleString" required
+                                    placeholder="Enter new rule string">
+                            </div>
+                            <button type="submit">Update Rule</button>
+                        </form>
+                        <pre id="update-rule-result"></pre>
+                    </div>
+                </div>
+            </div>
         </div>
         <script>
             function generateTreeHTML(node, prefix = '', isLeft = true) {
@@ -300,7 +345,33 @@
                 document.getElementById('rules-inputs').appendChild(ruleInputContainer);
             });
 
+            document.getElementById('evaluate-rule-form').addEventListener('submit', async function (event) {
+                event.preventDefault();
+
+                const ast = document.getElementById('evaluate-ast').value;
+                const data = document.getElementById('evaluate-data').value;
+                const resultElement = document.getElementById('evaluate-rule-result');
+                resultElement.textContent = '';
+                if (!ast || !data) {
+                    resultElement.textContent = 'Error: Please provide both AST and Data inputs.';
+                    return;
+                }
+
+                try {
+                    const parsedData = JSON.parse(data);
+                    const response = await fetch('/api/rules/evaluate_rule', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ ast, data: parsedData }),
+                    });
+                    const result = await response.json();
+                    resultElement.textContent = JSON.stringify(result, null, 2);
+                } catch (error) {
+                    resultElement.textContent = `Error: ${error.message}`;
+                }
+            });
         </script>
 </body>
-
 </html>

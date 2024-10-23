@@ -72,4 +72,31 @@ function printTree(node, prefix = '', isLeft = true) {
     if (node.right) printTree(node.right, prefix + (isLeft ? "│   " : "    "), false);
 }
 
-module.exports = { parseRuleString, combineNodes, printTree};
+function evaluate(node, data) {
+    if (node.type === 'operator') {
+        const leftResult = evaluate(node.left, data);
+        const rightResult = evaluate(node.right, data);
+        return node.operator === 'AND' ? leftResult && rightResult : leftResult || rightResult;
+    }
+
+    if (node.type === 'operand') {
+        let { key, operator, value } = node;
+        value = typeof value === 'string' && value.startsWith("'") && value.endsWith("'")
+            ? value.slice(1, -1)
+            : value;
+
+        switch (operator) {
+            case '>': return data[key] > value;
+            case '<': return data[key] < value;
+            case '>=': return data[key] >= value;
+            case '<=': return data[key] <= value;
+            case '==':
+            case '=': return data[key] == value;
+            case '!=': return data[key] != value;
+            default: return false;
+        }
+    }
+    return false;
+}
+
+module.exports = { parseRuleString, combineNodes, printTree, evaluate };
