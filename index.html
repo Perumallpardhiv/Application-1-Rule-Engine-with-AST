@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
     <title>Rule Engine </title>
     <style>
         :root {
@@ -272,8 +271,9 @@
                 </div>
             </div>
             <div class="hhistory">
-                <h2>View All Rules</h2>
+                <h1>View All Rules</h1>
                 <button id="reload-history" class="reload-button">Reload History</button>
+                <br></br>
                 <div id="rule-history"></div>
             </div>
         </div>
@@ -465,9 +465,18 @@
                         <div class="history-title">${rule.ruleName} </div>
                         <div class="history-date">${new Date(rule.createdAt).toLocaleString()}</div>
                         <div class="rule-string" style="display: none;"></div>
+                        <br>
+                        <div class="rule-string-ast" style="display: none;"></div>
                     `;
                         historyItem.onclick = () => {
-                            const ruleStringDiv = historyItem.querySelector('.rule-string');
+                            const ruleString = historyItem.querySelector('.rule-string');
+                            if (ruleString.style.display === 'none') {
+                                ruleString.textContent = rule.ruleASTString;
+                                ruleString.style.display = 'block';
+                            } else {
+                                ruleString.style.display = 'none';
+                            }
+                            const ruleStringDiv = historyItem.querySelector('.rule-string-ast');
                             if (ruleStringDiv.style.display === 'none') {
                                 const treeHTML = generateTreeHTML(rule.ruleAST);
                                 ruleStringDiv.innerHTML = treeHTML;

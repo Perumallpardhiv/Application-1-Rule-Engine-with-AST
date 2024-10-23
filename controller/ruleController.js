@@ -1,5 +1,5 @@
 const Rule = require('../models/ruleSchema');
-const { parseRuleString } = require('../utils/ast');
+const { parseRuleString, combineNodes, evaluate } = require('../utils/ast');
 
 exports.createRule = async (req, res) => {
   const { ruleName, ruleString } = req.body;
