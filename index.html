@@ -141,6 +141,40 @@
         .upme {
             background-color: #1e1e1e;
         }
+
+        .hhistory {
+            background-color: var(--card);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .history-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 6px;
+        }
+
+        .history-item:hover {
+            background-color: rgba(79, 131, 204, 0.1);
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-title {
+            font-weight: 600;
+            color: var(--heading);
+            margin-bottom: 0.5rem;
+        }
+
+        .history-date {
+            font-size: 0.875rem;
+            color: var(--secondary);
+        }
     </style>
 </head>
 
@@ -236,6 +270,11 @@
                         <pre id="update-rule-result"></pre>
                     </div>
                 </div>
+            </div>
+            <div class="hhistory">
+                <h2>View All Rules</h2>
+                <button id="reload-history" class="reload-button">Reload History</button>
+                <div id="rule-history"></div>
             </div>
         </div>
         <script>
@@ -408,6 +447,59 @@
                     resultElement.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
                 }
             };
+
+            async function fetchRuleHistory() {
+                try {
+                    const response = await fetch('/api/rules/history');
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const rules = await response.json();
+                    const historyContainer = document.getElementById('rule-history');
+                    historyContainer.innerHTML = '';
+
+                    rules.forEach(rule => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
+                        historyItem.innerHTML = `
+                        <div class="history-title">${rule.ruleName} </div>
+                        <div class="history-date">${new Date(rule.createdAt).toLocaleString()}</div>
+                        <div class="rule-string" style="display: none;"></div>
+                    `;
+                        historyItem.onclick = () => {
+                            const ruleStringDiv = historyItem.querySelector('.rule-string');
+                            if (ruleStringDiv.style.display === 'none') {
+                                const treeHTML = generateTreeHTML(rule.ruleAST);
+                                ruleStringDiv.innerHTML = treeHTML;
+                                ruleStringDiv.style.display = 'block';
+                            } else {
+                                ruleStringDiv.style.display = 'none';
+                            }
+                        };
+
+                        historyContainer.appendChild(historyItem);
+                    });
+                } catch (error) {
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'error-message';
+                    errorMessage.textContent = 'Error fetching rule history. Please try again later.';
+                    document.getElementById('rule-history').appendChild(errorMessage);
+                    console.error('Error fetching rule history:', error);
+                }
+            }
+
+            document.getElementById('reload-history').addEventListener('click', fetchRuleHistory);
+            document.addEventListener('DOMContentLoaded', fetchRuleHistory);
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.querySelector(`h2:contains('${targetId}')`);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
         </script>
 </body>
 </html>

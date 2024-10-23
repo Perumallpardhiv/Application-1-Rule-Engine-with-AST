@@ -110,3 +110,16 @@ exports.updateRule = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getRuleHistory = async (req, res) => {
+  try {
+    const rules = await Rule.find({})
+      .select('ruleName createdAt ruleASTString ruleAST')
+      .sort('-createdAt')
+      .limit(10);
+
+    res.status(200).json(rules);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
