@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Rule Engine </title>
+    <style>
+        :root {
+            --primary: #4f83cc;
+            --primary-dark: #357ab8;
+            --secondary: #9aa0a6;
+            --success: #4caf50;
+            --background: #121212;
+            --card: #1e1e1e;
+            --border: #292929;
+            --text: #e0e0e0;
+            --heading: #ffffff;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .navbar {
+            background-color: var(--card);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .nav-brand {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.3s ease, transform 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background-color: rgba(79, 131, 204, 0.1);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 5rem;
+        }
+
+        .main-content {
+            background-color: var(--card);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+            text-align: start;
+        }
+
+        .main-content2 {
+            background-color: var(--card);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            color: var(--text);
+            background-color: #1e1e1e;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .in {
+            background-color: #292929;
+            text-align: center;
+            padding: 60px 0;
+            justify-content: center;
+            display: flex;
+            font-size: 50px;
+            color: var(--heading);
+        }
+
+        .upme {
+            background-color: #1e1e1e;
+        } 
+    </style> 
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-brand">Rule Engine with AST</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="form-container">
+                <div class="main-content2">
+                    <h2>Create Rule</h2>
+                    <div class="main-content">
+                        <form id="create-rule-form">
+                            <div>
+                                <label for="ruleName">Rule Name:</label>
+                                <input type="text" id="ruleName" name="ruleName" required placeholder="Enter rule name">
+                            </div>
+                            <div>
+                                <label for="ruleString">Rule:</label>
+                                <input type="text" id="ruleString" name="ruleString" required
+                                    placeholder="Enter rule string">
+                            </div>
+                            <button type="submit">Create Rule</button>
+                        </form>
+                        <pre id="create-rule-result"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            function generateTreeHTML(node, prefix = '', isLeft = true) {
+                if (!node) return '';
+
+                let treeHTML = '';
+                treeHTML += prefix + (isLeft ? "├── " : "└── ") + (node.type === 'operator' ? node.operator : `${node.key} ${node.operator} ${node.value}`) + '<br>';
+
+                if (node.left) treeHTML += generateTreeHTML(node.left, prefix + (isLeft ? "│   " : "    "), true);
+                if (node.right) treeHTML += generateTreeHTML(node.right, prefix + (isLeft ? "│   " : "    "), false);
+
+                return treeHTML;
+            }
+
+            function displayTree(tree) {
+                const treeHTML = generateTreeHTML(tree);
+                document.getElementById('combined-rules-tree').innerHTML = treeHTML;
+            }
+
+            document.getElementById('create-rule-form').addEventListener('submit', async function (event) {
+                event.preventDefault();
+                const ruleName = document.getElementById('ruleName').value.trim();
+                const ruleString = document.getElementById('ruleString').value.trim();
+                const resultElement = document.getElementById('create-rule-result');
+                resultElement.innerHTML = '';
+
+                if (!ruleName || !ruleString) {
+                    resultElement.innerHTML = '<p style="color:red;">Error: Rule Name and Rule String must be non-empty strings.</p>';
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/rules/create_rule', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ ruleName, ruleString }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to create rule. Please check your input or try again later.');
+                    }
+
+                    const result = await response.json();
+                    if (!result.ruleAST || !result.ruleName) {
+                        throw new Error('Invalid response from the server. Missing rule data.');
+                    }
+                    let treeHTML = generateTreeHTML(result.ruleAST);
+                    treeHTML += `<br><p>Rule Name: ${result.ruleName}</p>`;
+                    resultElement.innerHTML = treeHTML;
+                } catch (error) {
+                    resultElement.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+                }
+            });
+        </script>
+</body>
+
+</html>
