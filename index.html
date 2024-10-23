@@ -372,6 +372,42 @@
                     resultElement.textContent = `Error: ${error.message}`;
                 }
             });
+
+            document.getElementById('update-rule-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const updateRuleId = document.getElementById('updateRuleId').value.trim();
+                const newRuleName = document.getElementById('updateRuleName').value.trim();
+                const newRuleString = document.getElementById('updateRuleString').value.trim();
+                const resultElement = document.getElementById('update-rule-result');
+
+                resultElement.innerHTML = '';
+                if (!updateRuleId || !newRuleName || !newRuleString) {
+                    resultElement.innerHTML = '<p style="color:red;">Error: All fields must be filled out.</p>';
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/rules/update_rule', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            ruleName: updateRuleId,
+                            newRuleName: newRuleName,
+                            newRuleString: newRuleString
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to update rule. Please check your input or try again later.');
+                    }
+                    const result = await response.json();
+                    resultElement.innerHTML = `<p>Rule Updated Successfully: ${result.updatedRuleName}</p>`;
+                } catch (error) {
+                    resultElement.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+                }
+            };
         </script>
 </body>
 </html>

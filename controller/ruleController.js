@@ -79,3 +79,34 @@ exports.evaluateRule = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.updateRule = async (req, res) => {
+  const { ruleName, newRuleName, newRuleString } = req.body;
+
+  if (!ruleName || (!newRuleName && !newRuleString)) {
+    return res.status(400).json({ error: 'Fill all details' });
+  }
+
+  try {
+    const rule = await Rule.findOne({ ruleName });
+
+    if (!rule) {
+      return res.status(404).json({ error: 'Rule not found' });
+    }
+
+    if (newRuleName) {
+      rule.ruleName = newRuleName;
+    }
+    if (newRuleString) {
+      const rootNode = parseRuleString(newRuleString);
+      rule.ruleAST = rootNode;
+      rule.ruleASTString = newRuleString;
+    }
+
+    await rule.save();
+    res.status(200).json({ message: 'Rule Updated', updatedRuleName: rule.ruleName });
+  } catch (error) {
+    console.error('Error updating rule:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
